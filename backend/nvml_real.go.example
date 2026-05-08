@@ -1,0 +1,63 @@
+// +build ignore
+//
+// nvml_real.go — Real NVML implementation using go-nvml.
+// Rename this file to nvml_real.go and delete nvml.go to use real GPU metrics.
+// Requires CGO_ENABLED=1 and nvidia-container-toolkit installed.
+
+package main
+
+import (
+	"fmt"
+
+	"github.com/NVIDIA/go-nvml/pkg/nvml"
+)
+
+func collectNVML() ([]GPUMetrics, error) {
+	ret := nvml.Init()
+	if ret != nvml.SUCCESS {
+		return nil, fmt.Errorf("NVML init failed: %v", nvml.ErrorString(ret))
+	}
+	defer nvml.Shutdown()
+
+	count, ret := nvml.DeviceGetCount()
+	if ret != nvml.SUCCESS {
+		return nil, fmt.Errorf("device count failed: %v", nvml.ErrorString(ret))
+	}
+
+	driverVersion, _ := nvml.SystemGetDriverVersion()
+
+	var gpus []GPUMetrics
+	for i := 0; i < count; i++ {
+		device, ret := nvml.DeviceGetHandleByIndex(i)
+		if ret != nvml.SUCCESS {
+			continue
+		}
+
+		name, _ := device.GetName()
+		uuid, _ := device.GetUUID()
+		temp, _ := device.GetTemperature(nvml.TEMPERATURE_GPU)
+		power, _ := device.GetPowerUsage()
+		powerLimit, _ := device.GetEnforcedPowerLimit()
+		utilization, _ := device.GetUtilizationRates()
+		memInfo, _ := device.GetMemoryInfo()
+		fan, _ := device.GetFanSpeed()
+
+		gpus = append(gpus, GPUMetrics{
+			Index:             i,
+			Name:              name,
+			UUID:              uuid,
+			Temperature:       uint32(temp),
+			PowerDraw:         uint32(power / 1000),     // mW → W
+			PowerLimit:        uint32(powerLimit / 1000), // mW → W
+			GPUUtilization:    utilization.Gpu,
+			MemoryUtilization: utilization.Memory,
+			MemoryUsed:        memInfo.Used,
+			MemoryTotal:       memInfo.Total,
+			FanSpeed:          uint32(fan),
+			DriverVersion:     driverVersion,
+			CUDAVersion:       "12.4",
+		})
+	}
+
+	return gpus, nil
+}
