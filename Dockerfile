@@ -2,7 +2,7 @@
 # Shows real-time NVIDIA GPU metrics in Docker Desktop
 
 # Stage 1: Build Go backend
-FROM golang:1.22-bookworm AS backend-builder
+FROM golang:1.26-bookworm AS backend-builder
 
 WORKDIR /app
 COPY backend/go.mod backend/go.sum ./
