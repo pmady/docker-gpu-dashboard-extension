@@ -23,7 +23,7 @@ COPY ui/ .
 RUN npm run build
 
 # Stage 3: Extension image
-FROM alpine:3.19
+FROM alpine:3.23
 
 LABEL org.opencontainers.image.title="GPU Dashboard"
 LABEL org.opencontainers.image.description="Real-time NVIDIA GPU metrics in Docker Desktop"
