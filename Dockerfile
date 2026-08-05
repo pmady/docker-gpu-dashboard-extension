@@ -13,7 +13,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o gpu-backend .
 RUN CGO_ENABLED=0 GOOS=darwin go build -ldflags="-s -w" -o gpu-backend-darwin .
 
 # Stage 2: Build React frontend
-FROM node:20-alpine AS frontend-builder
+FROM node:25-alpine AS frontend-builder
 
 WORKDIR /app
 COPY ui/package.json ui/package-lock.json ./
